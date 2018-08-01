@@ -1,4 +1,5 @@
 import com.jayway.jsonpath.JsonPath;
+import com.jayway.jsonpath.PathNotFoundException;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -11,15 +12,47 @@ import java.util.List;
 
 class RequestHandler {
 
-    private Response realProcess(long id, long dotaId) throws IOException {
+    private String steamApiKey = "?key=3CA0BE48B4A477BAEB443C38E66EBD00&";
+    private String steamMatchUrl = "http://api.steampowered.com/IDOTA2Match_570/";
+    private String steamUserUrl = "http://api.steampowered.com/ISteamUser/";
+    private String methodPlayerSum = "GetPlayerSummaries/v0002/";
+    private String methodHistory = "GetMatchHistory/V001/";
+    private String methodMatch = "GetMatchDetails/v1/";
+
+    //http://api.steampowered.com/ISteamUser/GetPlayerSummaries/v0002/?key=3CA0BE48B4A477BAEB443C38E66EBD00&steamids=76561197996852270
+    private Response checkProcess(long id) throws IOException {
+        // формируем запрос
+        URL reqHistory = new URL(steamUserUrl + methodPlayerSum + steamApiKey +
+                "steamids=" + id);
+
+        // открываем соединение
+        HttpURLConnection reqConnection = (HttpURLConnection) reqHistory.openConnection();
+
+        // поток ответа на запрос
+        InputStream is = reqConnection.getInputStream();
+
+        // формируем строку JSON
+        String toParseUserSum = getJSONString(is);
+
+        // берем инфу
+        int personalState = JsonPath.read(toParseUserSum, "$.response.players[0].personastate");
+
+
+        // наверное так делать нехорошо, но не знаю как ещё проверить отсуствите \ наличие ключа
+        String gameName;
+        try {
+            gameName = JsonPath.read(toParseUserSum, "$.response.players[0].gameextrainfo");
+        } catch (PathNotFoundException e) {
+            gameName = "not in game";
+        }
+
+        return new Response(personalState, gameName);
+    }
+
+    private Response lastProcess(long id, long dotaId) throws IOException {
 
         // формируем запрос
-        String steamApiKey = "?key=3CA0BE48B4A477BAEB443C38E66EBD00&";
-        String steamUrl = "http://api.steampowered.com/IDOTA2Match_570/";
-        String methodHistory = "GetMatchHistory/V001/";
-        String methodMatch = "GetMatchDetails/v1/";
-
-        URL reqHistory = new URL(steamUrl + methodHistory + steamApiKey +
+        URL reqHistory = new URL(steamMatchUrl + methodHistory + steamApiKey +
                 "account_id=" + id + "&matches_requested=2");
 
         // открываем соединение
@@ -47,8 +80,8 @@ class RequestHandler {
         int slotSecond = getSlot(listSlotSecond);
 
         // запросы к матчам
-        URL reqMatch1 = new URL(steamUrl + methodMatch + steamApiKey + "match_id=" + matchIdFirst);
-        URL reqMatch2 = new URL(steamUrl + methodMatch + steamApiKey + "match_id=" + matchIdSecond);
+        URL reqMatch1 = new URL(steamMatchUrl + methodMatch + steamApiKey + "match_id=" + matchIdFirst);
+        URL reqMatch2 = new URL(steamMatchUrl + methodMatch + steamApiKey + "match_id=" + matchIdSecond);
 
         // коннект
         HttpURLConnection reqMatch1Connection = (HttpURLConnection) reqMatch1.openConnection();
@@ -98,25 +131,45 @@ class RequestHandler {
     }
 
     Response process(String name) throws IOException {
+
+        // ниже в методе - это публичные id, нет проблем их показывать
         Response result;
         switch (name) {
-            case "Making Cookies Having Teas.":
-                result = realProcess(76561198076555150L, 116289422L);
+            case "/l Making Cookies Having Teas.":
+                result = lastProcess(76561198076555150L, 116289422L);
                 break;
-            case "ATHLETE!":
-                result = realProcess(76561198218694973L, 258429245L);
+            case "/l ATHLETE!":
+                result = lastProcess(76561198218694973L, 258429245L);
                 break;
-            case "фкыруевмило":
-                result = realProcess(76561198090747251L, 130481523L);
+            case "/l фкыруевмило":
+                result = lastProcess(76561198090747251L, 130481523L);
                 break;
-            case "Milonov":
-                result = realProcess(76561198038007191L, 77741463L);
+            case "/l Milonov":
+                result = lastProcess(76561198038007191L, 77741463L);
                 break;
-            case "ANYA II. BACK TO DOTA":
-                result = realProcess(76561197996852270L, 36586542L);
+            case "/l ANYA II. BACK TO DOTA":
+                result = lastProcess(76561197996852270L, 36586542L);
                 break;
-            case "Bird is the word":
-                result = realProcess(76561198810259532L, 0);
+            case "/l Bird is the word":
+                result = lastProcess(76561198810259532L, 0);
+                break;
+            case "/c Making Cookies Having Teas.":
+                result = checkProcess(76561198076555150L);
+                break;
+            case "/c ATHLETE!":
+                result = checkProcess(76561198218694973L);
+                break;
+            case "/c фкыруевмило":
+                result = checkProcess(76561198090747251L);
+                break;
+            case "/c Milonov":
+                result = checkProcess(76561198038007191L);
+                break;
+            case "/c ANYA II. BACK TO DOTA":
+                result = checkProcess(76561197996852270L);
+                break;
+            case "/c Bird is the word":
+                result = checkProcess(76561198810259532L);
                 break;
             default:
                 return null;

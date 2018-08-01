@@ -1,5 +1,7 @@
 import java.util.Calendar;
 
+
+// TODO: создать качественный объект для информации об одной игре, чтобы удобно хранить Х объектов
 class Response {
     private final String header = " играл последний раз ";
     private final String middler = "2 катки с конца:";
@@ -14,6 +16,13 @@ class Response {
     private String secondGameDuration;
     private String firstGameLobby;
     private String secondGameLobby;
+    private String gameName;
+    private String personalState;
+
+    Response(int state, String gameName) {
+        this.gameName = gameName;
+        this.personalState = getState(state);
+    }
 
     Response(int time, int firstGameHero, int secondGameHero, boolean firstGameResult, boolean secondGameResult,
              int firstGameLobby, int secondGameLobby, int firstGameDuration, int secondGameDuration,
@@ -36,10 +45,18 @@ class Response {
 
     private String getTime(int time) {
         Calendar date = Calendar.getInstance();
-        date.setTimeInMillis((long) time *1000);
+        date.setTimeInMillis((long) time * 1000);
         int month = date.get(Calendar.MONTH) + 1;
-        return date.get(Calendar.DAY_OF_MONTH) + "." + month+
+        return date.get(Calendar.DAY_OF_MONTH) + "." + month +
                 " " + date.get(Calendar.HOUR_OF_DAY) + ":" + date.get(Calendar.MINUTE);
+    }
+
+    String getPersonalState() {
+        return personalState;
+    }
+
+    String getGameName() {
+        return gameName;
     }
 
     String getHeader() {
@@ -94,27 +111,35 @@ class Response {
         return secondGameLobby;
     }
 
-    private String getLobby (int type) {
+    private String getLobby(int type) {
         switch (type) {
-            case 0: return "Пабчик";
-            case 1: return "Тренировка";
-            case 4: return "С ботами";
-            case 5: return "Командная";
-            case 6: return "Соляново";
-            case 7: return "RMM";
-            case 8: return "1x1 mid";
-            default: return "unknown lobby type";
+            case 0:
+                return "Пабчик";
+            case 1:
+                return "Тренировка";
+            case 4:
+                return "С ботами";
+            case 5:
+                return "Командная";
+            case 6:
+                return "Соляново";
+            case 7:
+                return "RMM";
+            case 8:
+                return "1x1 mid";
+            default:
+                return "unknown lobby type";
         }
     }
 
-    private String getDuration (int time) {
+    private String getDuration(int time) {
         int m = time / 60;
         int s = time % 60;
 
-        return m+":"+s;
+        return m + ":" + s;
     }
 
-    private String getResult (int slot, boolean result) {
+    private String getResult(int slot, boolean result) {
         if (slot < 5 & result || slot >= 5 & !result) {
             return "Win";
         } else return "Lose";
@@ -124,6 +149,26 @@ class Response {
         if (slot < 5) {
             return "Radiant";
         } else return "Dire";
+    }
+
+    private String getState(int i) {
+        switch (i) {
+            case 0:
+                return "Offline";
+            case 1:
+                return "Online";
+            case 2:
+                return "Busy";
+            case 3:
+                return "Away";
+            case 4:
+                return "Snooze";
+            case 5:
+                return "Looking to trade";
+            case 6:
+                return "Looking to play";
+                default: return " ";
+        }
     }
 
     private String getHeroFromId(int id) {
