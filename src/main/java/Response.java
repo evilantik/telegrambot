@@ -154,19 +154,19 @@ class Response {
     private String getState(int i) {
         switch (i) {
             case 0:
-                return "Offline";
+                return "Оффлайн";
             case 1:
-                return "Online";
+                return "Онлайн";
             case 2:
-                return "Busy";
+                return "Занят";
             case 3:
-                return "Away";
+                return "АФК";
             case 4:
-                return "Snooze";
+                return "Глубокий АФК";
             case 5:
-                return "Looking to trade";
+                return "ЛФТ";
             case 6:
-                return "Looking to play";
+                return "ЛФП";
                 default: return " ";
         }
     }

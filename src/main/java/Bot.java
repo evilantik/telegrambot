@@ -7,6 +7,8 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.Keyboard
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -112,7 +114,7 @@ public class Bot extends TelegramLongPollingBot {
                 try {
                     Response response = requestHandler.process(text);
 
-                    String message = text.substring(3) + ": status - " + response.getPersonalState() + ", game - " + response.getGameName();
+                    String message = text.substring(3) + ": статус - " + response.getPersonalState() + ", игра - " + response.getGameName();
                     sendMsg(chatIdForReply, message);
                     logger.info("Запрос по " + text + " от " + userName + " | " + firstName + " | " + lastName);
                 } catch (IOException e) {
@@ -246,6 +248,11 @@ public class Bot extends TelegramLongPollingBot {
     }
 
     public String getBotToken() {
-        return "674228669:AAGo5Rw0URRDDrjyzGztO--GM14JG6Y7s9M";
+        try {
+            return new String(Files.readAllBytes(Paths.get("./src/main/resources/telegramApiKey")));
+        } catch (IOException e) {
+            logger.error("ошибка при чтении токена бота");
+            e.printStackTrace();
+        } return null;
     }
 }

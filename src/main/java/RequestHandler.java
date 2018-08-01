@@ -8,18 +8,19 @@ import java.io.Reader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.List;
 
 class RequestHandler {
 
-    private String steamApiKey = "?key=3CA0BE48B4A477BAEB443C38E66EBD00&";
+    private String steamApiKey = "?key="+getSteamAipKey()+"&";
     private String steamMatchUrl = "http://api.steampowered.com/IDOTA2Match_570/";
     private String steamUserUrl = "http://api.steampowered.com/ISteamUser/";
     private String methodPlayerSum = "GetPlayerSummaries/v0002/";
     private String methodHistory = "GetMatchHistory/V001/";
     private String methodMatch = "GetMatchDetails/v1/";
 
-    //http://api.steampowered.com/ISteamUser/GetPlayerSummaries/v0002/?key=3CA0BE48B4A477BAEB443C38E66EBD00&steamids=76561197996852270
     private Response checkProcess(long id) throws IOException {
         // формируем запрос
         URL reqHistory = new URL(steamUserUrl + methodPlayerSum + steamApiKey +
@@ -43,7 +44,7 @@ class RequestHandler {
         try {
             gameName = JsonPath.read(toParseUserSum, "$.response.players[0].gameextrainfo");
         } catch (PathNotFoundException e) {
-            gameName = "not in game";
+            gameName = "не в игре";
         }
 
         return new Response(personalState, gameName);
@@ -185,5 +186,12 @@ class RequestHandler {
             return result - 123;
         }
 
+    }
+    private String getSteamAipKey() {
+        try {
+            return new String(Files.readAllBytes(Paths.get("./src/main/resources/steamApiKey")));
+        } catch (IOException e) {
+            e.printStackTrace();
+        } return null;
     }
 }
