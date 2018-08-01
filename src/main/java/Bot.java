@@ -248,11 +248,6 @@ public class Bot extends TelegramLongPollingBot {
     }
 
     public String getBotToken() {
-        try {
-            return new String(Files.readAllBytes(Paths.get("./src/main/resources/telegramApiKey")));
-        } catch (IOException e) {
-            logger.error("ошибка при чтении токена бота");
-            e.printStackTrace();
-        } return null;
+        return System.getenv("telegramApiKey");
     }
 }

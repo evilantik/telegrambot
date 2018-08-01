@@ -188,10 +188,6 @@ class RequestHandler {
 
     }
     private String getSteamAipKey() {
-        try {
-            return new String(Files.readAllBytes(Paths.get("./src/main/resources/steamApiKey")));
-        } catch (IOException e) {
-            e.printStackTrace();
-        } return null;
+        return System.getenv("steamApiKey");
     }
 }
