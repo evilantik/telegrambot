@@ -18,6 +18,8 @@ public class Bot extends TelegramLongPollingBot {
 
     private RequestHandler requestHandler = new RequestHandler();
 
+    private Player lastPlayer;
+
     public void onUpdateReceived(Update update) {
 
         // переменные из апдейта для использования
@@ -54,50 +56,20 @@ public class Bot extends TelegramLongPollingBot {
         String checkPattern = "[/][c][ ].*";
         Pattern checkP = Pattern.compile(checkPattern);
 
+        String numPattern = "[1-9]";
+        Pattern numP = Pattern.compile(numPattern);
+
         //обработка кнопок
         Matcher lastMatcher = lastP.matcher(text);
         Matcher checkMatcher = checkP.matcher(text);
+        Matcher numMatcher = numP.matcher(text);
 
-        if (lastMatcher.find()) {
+        if (lastMatcher.find() || checkMatcher.find()) {
             try {
                 Response response = requestHandler.process(text);
+                lastPlayer = response.getPlayer();
 
-                // TODO: эту логику в респонс бы
-                StringBuilder sb = new StringBuilder(text.substring(3))
-                        .append(response.getHeader())
-                        .append(response.getTimeOfLastGame())
-                        .append("\n")
-                        .append(response.getMiddler())
-                        .append("\n")
-                        .append("1. ")
-                        .append(response.getFirstGameHero())
-                        .append(", ")
-                        .append(response.getFirstGameSide())
-                        .append(", ")
-                        .append("*")
-                        .append(response.getFirstGameResult())
-                        .append("*")
-                        .append(", ")
-                        .append(response.getFirstGameLobby())
-                        .append(", ")
-                        .append(response.getFirstGameDuration())
-                        .append(", ")
-                        .append("\n")
-                        .append("2. ")
-                        .append(response.getSecondGameHero())
-                        .append(", ")
-                        .append(response.getSecondGameSide())
-                        .append(", ")
-                        .append("*")
-                        .append(response.getSecondGameResult())
-                        .append("*")
-                        .append(", ")
-                        .append(response.getSecondGameLobby())
-                        .append(", ")
-                        .append(response.getSecondGameDuration());
-
-
-                String message = sb.toString();
+                String message = response.toString();
 
                 sendMsg(chatIdForReply, message);
 
@@ -106,16 +78,43 @@ public class Bot extends TelegramLongPollingBot {
             } catch (IOException e) {
                 logger.error(e.getStackTrace());
             }
-        } else if (checkMatcher.find()) {
+        } else if (numMatcher.find()) {
             try {
-                Response response = requestHandler.process(text);
-
-                String message = text.substring(3) + ": статус - " + response.getPersonalState() + ", игра - " + response.getGameName();
+                Response response = requestHandler.process(Integer.parseInt(text), lastPlayer);
+                String message = response.toString();
                 sendMsg(chatIdForReply, message);
+
                 logger.info("Запрос по " + text + " от " + userName + " | " + firstName + " | " + lastName);
+
             } catch (IOException e) {
-                logger.error(e.getMessage());
-                e.printStackTrace();
+                logger.error(e.getStackTrace());
+            }
+        } else if (text.equals("/check all")) {
+            try {
+                Response response = requestHandler.process(Player.ANTON);
+                StringBuilder stringBuilder = new StringBuilder(response.toString());
+                stringBuilder.append("\n");
+                response = requestHandler.process(Player.ANYA);
+                stringBuilder.append(response.toString());
+                stringBuilder.append("\n");
+                response = requestHandler.process(Player.ARKAD);
+                stringBuilder.append(response.toString());
+                stringBuilder.append("\n");
+                response = requestHandler.process(Player.MCHT);
+                stringBuilder.append(response.toString());
+                stringBuilder.append("\n");
+                response = requestHandler.process(Player.MELKI);
+                stringBuilder.append(response.toString());
+                stringBuilder.append("\n");
+                response = requestHandler.process(Player.VOLSH);
+                stringBuilder.append(response.toString());
+
+                sendMsg(chatIdForReply, stringBuilder.toString());
+
+                logger.info("Запрос по " + text + " от " + userName + " | " + firstName + " | " + lastName);
+
+            } catch (IOException e) {
+                logger.error(e.getStackTrace());
             }
         }
     }
@@ -211,6 +210,10 @@ public class Bot extends TelegramLongPollingBot {
         row.add("/c ANYA II. BACK TO DOTA");
         row.add("/c Bird is the word");
         // Добавить в лист
+        keyboard.add(row);
+
+        row = new KeyboardRow();
+        row.add("/check all");
         keyboard.add(row);
         // Добавить лист в объект
         keyboardMarkup.setKeyboard(keyboard);
