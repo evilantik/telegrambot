@@ -7,10 +7,10 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.Keyboard
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class Bot extends TelegramLongPollingBot {
 
@@ -47,83 +47,76 @@ public class Bot extends TelegramLongPollingBot {
             }
         }
 
+        // паттерны для команд
+        String lastPattern = "[/][l][ ].*";
+        Pattern lastP = Pattern.compile(lastPattern);
+
+        String checkPattern = "[/][c][ ].*";
+        Pattern checkP = Pattern.compile(checkPattern);
+
         //обработка кнопок
-        switch (text) {
-            case "/l Making Cookies Having Teas.":
-            case "/l ATHLETE!":
-            case "/l фкыруевмило":
-            case "/l Milonov":
-            case "/l ANYA II. BACK TO DOTA":
-                try {
-                    Response response = requestHandler.process(text);
-                    StringBuilder sb = new StringBuilder(text.substring(3))
-                            .append(response.getHeader())
-                            .append(response.getTimeOfLastGame())
-                            .append("\n")
-                            .append(response.getMiddler())
-                            .append("\n")
-                            .append("1. ")
-                            .append(response.getFirstGameHero())
-                            .append(", ")
-                            .append(response.getFirstGameSide())
-                            .append(", ")
-                            .append("*")
-                            .append(response.getFirstGameResult())
-                            .append("*")
-                            .append(", ")
-                            .append(response.getFirstGameLobby())
-                            .append(", ")
-                            .append(response.getFirstGameDuration())
-                            .append(", ")
-                            .append("\n")
-                            .append("2. ")
-                            .append(response.getSecondGameHero())
-                            .append(", ")
-                            .append(response.getSecondGameSide())
-                            .append(", ")
-                            .append("*")
-                            .append(response.getSecondGameResult())
-                            .append("*")
-                            .append(", ")
-                            .append(response.getSecondGameLobby())
-                            .append(", ")
-                            .append(response.getSecondGameDuration());
+        Matcher lastMatcher = lastP.matcher(text);
+        Matcher checkMatcher = checkP.matcher(text);
+
+        if (lastMatcher.find()) {
+            try {
+                Response response = requestHandler.process(text);
+
+                // TODO: эту логику в респонс бы
+                StringBuilder sb = new StringBuilder(text.substring(3))
+                        .append(response.getHeader())
+                        .append(response.getTimeOfLastGame())
+                        .append("\n")
+                        .append(response.getMiddler())
+                        .append("\n")
+                        .append("1. ")
+                        .append(response.getFirstGameHero())
+                        .append(", ")
+                        .append(response.getFirstGameSide())
+                        .append(", ")
+                        .append("*")
+                        .append(response.getFirstGameResult())
+                        .append("*")
+                        .append(", ")
+                        .append(response.getFirstGameLobby())
+                        .append(", ")
+                        .append(response.getFirstGameDuration())
+                        .append(", ")
+                        .append("\n")
+                        .append("2. ")
+                        .append(response.getSecondGameHero())
+                        .append(", ")
+                        .append(response.getSecondGameSide())
+                        .append(", ")
+                        .append("*")
+                        .append(response.getSecondGameResult())
+                        .append("*")
+                        .append(", ")
+                        .append(response.getSecondGameLobby())
+                        .append(", ")
+                        .append(response.getSecondGameDuration());
 
 
-                    String message = sb.toString();
+                String message = sb.toString();
 
-                    sendMsg(chatIdForReply, message);
-
-                    logger.info("Запрос по " + text + " от " + userName + " | " + firstName + " | " + lastName);
-                } catch (IOException e) {
-                    logger.error(e.getStackTrace());
-                }
-                break;
-            case "/l Bird is the word": {
-                String message = "Не покажу, Этот нехороший человек так и не поставил галочку какую-то там, чтобы шарить свою статистику.";
                 sendMsg(chatIdForReply, message);
-                logger.info("Запрос по " + text + " от " + userName + " | " + firstName);
-                break;
+
+                logger.info("Запрос по " + text + " от " + userName + " | " + firstName + " | " + lastName);
+
+            } catch (IOException e) {
+                logger.error(e.getStackTrace());
             }
-            case "/c Making Cookies Having Teas.":
-            case "/c ATHLETE!":
-            case "/c фкыруевмило":
-            case "/c Milonov":
-            case "/c ANYA II. BACK TO DOTA":
-            case "/c Bird is the word": {
-                try {
-                    Response response = requestHandler.process(text);
+        } else if (checkMatcher.find()) {
+            try {
+                Response response = requestHandler.process(text);
 
-                    String message = text.substring(3) + ": статус - " + response.getPersonalState() + ", игра - " + response.getGameName();
-                    sendMsg(chatIdForReply, message);
-                    logger.info("Запрос по " + text + " от " + userName + " | " + firstName + " | " + lastName);
-                } catch (IOException e) {
-                    logger.error(e.getMessage());
-                    e.printStackTrace();
-                }
-
+                String message = text.substring(3) + ": статус - " + response.getPersonalState() + ", игра - " + response.getGameName();
+                sendMsg(chatIdForReply, message);
+                logger.info("Запрос по " + text + " от " + userName + " | " + firstName + " | " + lastName);
+            } catch (IOException e) {
+                logger.error(e.getMessage());
+                e.printStackTrace();
             }
-
         }
     }
 
@@ -134,6 +127,7 @@ public class Bot extends TelegramLongPollingBot {
 
 
         ReplyKeyboardMarkup keyboardMarkup = new ReplyKeyboardMarkup();
+        keyboardMarkup.setResizeKeyboard(true);
         List<KeyboardRow> keyboard = new ArrayList<>();
         KeyboardRow row = new KeyboardRow();
         row.add("/last");
@@ -157,6 +151,7 @@ public class Bot extends TelegramLongPollingBot {
 
         // Объект кнопок
         ReplyKeyboardMarkup keyboardMarkup = new ReplyKeyboardMarkup();
+        keyboardMarkup.setResizeKeyboard(true);
         // Сами кнопки \ лист рядов кнопок
         List<KeyboardRow> keyboard = new ArrayList<>();
         // Создать один ряд кнопок
@@ -198,6 +193,7 @@ public class Bot extends TelegramLongPollingBot {
 
         // Объект кнопок
         ReplyKeyboardMarkup keyboardMarkup = new ReplyKeyboardMarkup();
+        keyboardMarkup.setResizeKeyboard(true);
         // Сами кнопки \ лист рядов кнопок
         List<KeyboardRow> keyboard = new ArrayList<>();
         // Создать один ряд кнопок

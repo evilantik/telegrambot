@@ -8,8 +8,6 @@ import java.io.Reader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.List;
 
 class RequestHandler {
@@ -21,10 +19,10 @@ class RequestHandler {
     private String methodHistory = "GetMatchHistory/V001/";
     private String methodMatch = "GetMatchDetails/v1/";
 
-    private Response checkProcess(long id) throws IOException {
+    private Response checkProcess(Player player) throws IOException {
         // формируем запрос
         URL reqHistory = new URL(steamUserUrl + methodPlayerSum + steamApiKey +
-                "steamids=" + id);
+                "steamids=" + player.getSteamId());
 
         // открываем соединение
         HttpURLConnection reqConnection = (HttpURLConnection) reqHistory.openConnection();
@@ -50,11 +48,11 @@ class RequestHandler {
         return new Response(personalState, gameName);
     }
 
-    private Response lastProcess(long id, long dotaId) throws IOException {
+    private Response lastProcess(Player player) throws IOException {
 
         // формируем запрос
         URL reqHistory = new URL(steamMatchUrl + methodHistory + steamApiKey +
-                "account_id=" + id + "&matches_requested=2");
+                "account_id=" + player.getSteamId() + "&matches_requested=2");
 
         // открываем соединение
         HttpURLConnection reqConnection = (HttpURLConnection) reqHistory.openConnection();
@@ -75,8 +73,8 @@ class RequestHandler {
         int timeFirst = JsonPath.read(toParseHistory, "$.result.matches[0].start_time");
         //    int timeSecond = JsonPath.read(toParseHistory, "$.result.matches[1].start_time");
 
-        List<Integer> listSlotFirst = JsonPath.parse(toParseHistory).read("$.result.matches[0].players[?(@.account_id == '" + dotaId + "')].player_slot");
-        List<Integer> listSlotSecond = JsonPath.parse(toParseHistory).read("$.result.matches[1].players[?(@.account_id == '" + dotaId + "')].player_slot");
+        List<Integer> listSlotFirst = JsonPath.parse(toParseHistory).read("$.result.matches[0].players[?(@.account_id == '" + player.getDotaId() + "')].player_slot");
+        List<Integer> listSlotSecond = JsonPath.parse(toParseHistory).read("$.result.matches[1].players[?(@.account_id == '" + player.getDotaId() + "')].player_slot");
         int slotFirst = getSlot(listSlotFirst);
         int slotSecond = getSlot(listSlotSecond);
 
@@ -131,50 +129,22 @@ class RequestHandler {
         return out.toString();
     }
 
-    Response process(String name) throws IOException {
-
+    Response process(String data) throws IOException {
         // ниже в методе - это публичные id, нет проблем их показывать
         Response result;
-        switch (name) {
-            case "/l Making Cookies Having Teas.":
-                result = lastProcess(76561198076555150L, 116289422L);
-                break;
-            case "/l ATHLETE!":
-                result = lastProcess(76561198218694973L, 258429245L);
-                break;
-            case "/l фкыруевмило":
-                result = lastProcess(76561198090747251L, 130481523L);
-                break;
-            case "/l Milonov":
-                result = lastProcess(76561198038007191L, 77741463L);
-                break;
-            case "/l ANYA II. BACK TO DOTA":
-                result = lastProcess(76561197996852270L, 36586542L);
-                break;
-            case "/l Bird is the word":
-                result = lastProcess(76561198810259532L, 0);
-                break;
-            case "/c Making Cookies Having Teas.":
-                result = checkProcess(76561198076555150L);
-                break;
-            case "/c ATHLETE!":
-                result = checkProcess(76561198218694973L);
-                break;
-            case "/c фкыруевмило":
-                result = checkProcess(76561198090747251L);
-                break;
-            case "/c Milonov":
-                result = checkProcess(76561198038007191L);
-                break;
-            case "/c ANYA II. BACK TO DOTA":
-                result = checkProcess(76561197996852270L);
-                break;
-            case "/c Bird is the word":
-                result = checkProcess(76561198810259532L);
-                break;
-            default:
-                return null;
+
+        String name = data.substring(3);
+        Player player = Player.getPlayerByName(name);
+        char command = data.charAt(1);
+
+        switch (command) {
+            case 'l': result = lastProcess(player);
+            break;
+            case 'c': result = checkProcess(player);
+            break;
+            default: return null;
         }
+
         return result;
     }
 
