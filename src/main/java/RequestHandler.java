@@ -119,7 +119,7 @@ class RequestHandler {
         Hero hero = Hero.getHeroByShortName(data);
 
         Document doc;
-        StringBuilder s = new StringBuilder();
+        StringBuilder s = new StringBuilder(hero.getName()+" контрят:\n");
 
         doc = Jsoup.connect("https://www.dotabuff.com/heroes/" + hero.getLink() + "/counters/").userAgent("Mozilla").get();
         Elements counter = doc.body().getElementsByClass("counter-outline").select("td");

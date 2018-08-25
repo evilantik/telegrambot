@@ -130,7 +130,7 @@ public class Bot extends TelegramLongPollingBot {
             }
         } else if (checkContains(text.toLowerCase(), heroes)) {
             try {
-                String resp = requestHandler.counterProcess(text);
+                String resp = requestHandler.counterProcess(text.toLowerCase());
                 sendMsg(chatIdForReply, resp);
                 logger.info("Запрос по " + text + " от " + userName + " | " + firstName + " | " + lastName);
             } catch (IOException e) {
