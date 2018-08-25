@@ -119,7 +119,7 @@ class RequestHandler {
         Hero hero = Hero.getHeroByShortName(data);
 
         Document doc;
-        StringBuilder s = new StringBuilder(hero.getName()+" контрят:\n");
+        StringBuilder s = new StringBuilder();
 
         doc = Jsoup.connect("https://www.dotabuff.com/heroes/" + hero.getLink() + "/counters/").userAgent("Mozilla").get();
         Elements counter = doc.body().getElementsByClass("counter-outline").select("td");
@@ -140,8 +140,9 @@ class RequestHandler {
             k++;
         }
 
+        String name = hero.getName()+" контрят:\n";
 
-        return result.toString();
+        return name + result.toString();
 
 
     }
