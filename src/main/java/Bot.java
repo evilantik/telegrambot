@@ -22,6 +22,18 @@ public class Bot extends TelegramLongPollingBot {
 
     public void onUpdateReceived(Update update) {
 
+        String[] heroes = {"aba", "alch", "aa", "am", "aw", "axe", "bane", "bat", "bm", "blood", "bh", "brew",
+                            "bb", "brood", "cent", "ck", "chen", "clinkz", "clock", "cm", "ds", "dw", "dazzle",
+                            "dp", "dis", "doom", "dk", "dr", "earth", "es", "elder", "ember", "ench", "enigma",
+                            "void", "grim", "gyro", "huskar", "invoker", "io", "thd", "jugger", "kotl", "kunnka",
+                            "lc", "lesh", "lich", "naix", "lina", "lion", "lone", "luna", "lycan", "magnus", "medusa",
+                            "meepo", "potm", "mk", "morph", "naga", "np", "necro", "ns", "nyx", "ogre", "omni",
+                            "oracle", "od", "pangolier", "pa", "pl", "phoenix", "puck", "pudge", "pugna", "qop",
+                            "razor", "riki", "rubick", "sk", "sd", "sf", "ss", "sile", "sky", "slardar", "slark",
+                            "sniper", "spectre", "sb", "storm", "sven", "techies", "ta", "tb", "tide", "timber",
+                            "tinker", "tiny", "treat", "troll", "tusk", "underlord", "undying", "ursa", "vs", "veno",
+                            "viper", "visage", "wl", "weaver", "wr", "ww", "wd", "wk", "zeus"};
+
         // переменные из апдейта для использования
         String text = update.getMessage().getText();
         String userName = update.getMessage().getChat().getUserName();
@@ -116,6 +128,18 @@ public class Bot extends TelegramLongPollingBot {
             } catch (IOException e) {
                 logger.error(e.getStackTrace());
             }
+        } else if (checkContains(text.toLowerCase(), heroes)) {
+            try {
+                String resp = requestHandler.counterProcess(text);
+                sendMsg(chatIdForReply, resp);
+                logger.info("Запрос по " + text + " от " + userName + " | " + firstName + " | " + lastName);
+            } catch (IOException e) {
+                logger.error(e.getStackTrace());
+            }
+        }
+        else if (text.equals("heroes")) {
+            sendMsg(chatIdForReply, Hero.getAllHeroesShort());
+            logger.info("Запрос по " + text + " от " + userName + " | " + firstName + " | " + lastName);
         }
     }
 
@@ -240,6 +264,13 @@ public class Bot extends TelegramLongPollingBot {
             logger.error(e.toString());
             e.printStackTrace();
         }
+    }
+
+    private boolean checkContains(String s, String[] mass) {
+        for (String string :
+                mass) {
+            if (s.equals(string)) return true;
+        } return false;
     }
 
     public String getBotUsername() {

@@ -4,7 +4,7 @@ public enum Player {
     ANTON("фкыруевмило", 76561198090747251L, 130481523L),
     MELKI("Milonov", 76561198038007191L, 77741463L),
     ANYA("ANYA II. BACK TO DOTA", 76561197996852270L, 36586542L),
-    VOLSH("Bird is the word", 76561198810259532L, 0),
+    VOLSH("Bird is the word", 76561198810259532L, 849993804L),
     ERR("not a player", 0,0);
 
     private String name;

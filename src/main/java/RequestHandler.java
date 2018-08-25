@@ -1,5 +1,9 @@
 import com.jayway.jsonpath.JsonPath;
 import com.jayway.jsonpath.PathNotFoundException;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -12,7 +16,7 @@ import java.util.List;
 
 class RequestHandler {
 
-    private String steamApiKey = "?key="+getSteamAipKey()+"&";
+    private String steamApiKey = "?key=" + getSteamAipKey() + "&";
     private String steamMatchUrl = "http://api.steampowered.com/IDOTA2Match_570/";
     private String steamUserUrl = "http://api.steampowered.com/ISteamUser/";
     private String methodPlayerSum = "GetPlayerSummaries/v0002/";
@@ -50,13 +54,13 @@ class RequestHandler {
     private Response lastProcess(Player player, int n) throws IOException {
         if (n > 20) return new LastResponse();
 
-        long [] matchIds = new long[n];
+        long[] matchIds = new long[n];
         Game[] games = new Game[n];
 
 
         // формируем запрос
         URL reqHistory = new URL(steamMatchUrl + methodHistory + steamApiKey +
-                "account_id=" + player.getSteamId() + "&matches_requested="+n);
+                "account_id=" + player.getSteamId() + "&matches_requested=" + n);
 
         // открываем соединение
         HttpURLConnection reqConnection = (HttpURLConnection) reqHistory.openConnection();
@@ -70,7 +74,7 @@ class RequestHandler {
         // берем немного инфы для ответа и новых запросов
 
         for (int i = 0; i < n; i++) {
-            matchIds[i] = JsonPath.read(toParseHistory, "$.result.matches["+i+"].match_id");
+            matchIds[i] = JsonPath.read(toParseHistory, "$.result.matches[" + i + "].match_id");
         }
 
         for (int k = 0; k < n; k++) {
@@ -85,9 +89,9 @@ class RequestHandler {
             int time = JsonPath.read(toParseMatch, "$.result.start_time");
 
             // jsonpath тут работает с выражением ? поэтому возвращает jsonarray, для этого приходится создавать список
-            List<Integer> listSlot = JsonPath.parse(toParseMatch).read("$.result.players[?(@.account_id == '"+player.getDotaId()+"')].player_slot");
+            List<Integer> listSlot = JsonPath.parse(toParseMatch).read("$.result.players[?(@.account_id == '" + player.getDotaId() + "')].player_slot");
             int slot = getSlot(listSlot);
-            int hero = JsonPath.read(toParseMatch, "$.result.players["+slot+"].hero_id");
+            int hero = JsonPath.read(toParseMatch, "$.result.players[" + slot + "].hero_id");
             boolean result = JsonPath.read(toParseMatch, "$.result.radiant_win");
             int duration = JsonPath.read(toParseMatch, "$.result.duration");
 
@@ -111,6 +115,37 @@ class RequestHandler {
         return out.toString();
     }
 
+    String counterProcess(String data) throws IOException {
+        Hero hero = Hero.getHeroByShortName(data);
+
+        Document doc;
+        StringBuilder s = new StringBuilder();
+
+        doc = Jsoup.connect("https://www.dotabuff.com/heroes/" + hero.getLink() + "/counters/").userAgent("Mozilla").get();
+        Elements counter = doc.body().getElementsByClass("counter-outline").select("td");
+        for (Element e :
+                counter) {
+            s.append(e.text());
+            s.append("!");
+        }
+        s.deleteCharAt(0);
+        s.deleteCharAt(s.length() - 1);
+        String toSplit = s.toString().replace("!!", "!");
+        String[] strings = toSplit.split("!");
+
+        StringBuilder result = new StringBuilder();
+        int k = 1;
+        for (int i = 0; i < 15; i += 3) {
+            result.append("*").append(k).append(". ").append(strings[i]).append("*").append(" (преимущество: ").append(strings[i + 1]).append(", винрейт: ").append(strings[i + 2]).append(")\n");
+            k++;
+        }
+
+
+        return result.toString();
+
+
+    }
+
     Response process(String data) throws IOException {
         Response result;
 
@@ -119,15 +154,19 @@ class RequestHandler {
         char command = data.charAt(1);
 
         switch (command) {
-            case 'l': result = lastProcess(player, 2);
-            break;
-            case 'c': result = checkProcess(player);
-            break;
-            default: return null;
+            case 'l':
+                result = lastProcess(player, 2);
+                break;
+            case 'c':
+                result = checkProcess(player);
+                break;
+            default:
+                return null;
         }
 
         return result;
     }
+
     //TODO: тут некрасиво, переделать
     Response process(int n, Player player) throws IOException {
         return lastProcess(player, n);
@@ -146,6 +185,7 @@ class RequestHandler {
         }
 
     }
+
     private String getSteamAipKey() {
         return System.getenv("steamApiKey");
     }

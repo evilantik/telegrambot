@@ -301,6 +301,8 @@ class Game {
                 return "Ember Spirit";
             case 107:
                 return "Earth Spirit";
+            case 108:
+                return "Underlord";
             case 109:
                 return "Terrorblade";
             case 110:
@@ -313,6 +315,14 @@ class Game {
                 return "WW";
             case 113:
                 return "Arc Warden";
+            case 114:
+                return "MK";
+            case 119:
+                return "Dark Willow";
+            case 120:
+                return "Pangolier";
+            case 121:
+                return "Grimstroke";
 
         }
         return "Unknown hero";
